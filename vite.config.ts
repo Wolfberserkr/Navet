@@ -16,8 +16,6 @@ export default defineConfig({
         name: 'The Village',
         short_name: 'Village',
         description: "Rick's village of AI directors.",
-        start_url: '/',
-        scope: '/',
         display: 'fullscreen',
         orientation: 'any',
         background_color: '#16182a',
