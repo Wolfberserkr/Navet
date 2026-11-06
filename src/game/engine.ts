@@ -7,6 +7,7 @@ import { TouchStick } from './touch';
 import { HOTSPOTS, type Hotspot } from '../data/residents';
 import { drawLabel } from './labels';
 import { Lighting } from './lighting';
+import { Ambient } from './ambient';
 
 /** Where Rick appears: the plaza, between the town hall steps and the fountain. */
 const SPAWN = { x: 1150, y: 830 };
@@ -37,6 +38,7 @@ export class VillageEngine {
   private near: Hotspot | null = null;
   private open: Hotspot | null = null;
   readonly lighting = new Lighting();
+  private ambient = new Ambient();
   private readonly touchHint = window.matchMedia?.('(pointer: coarse)').matches ?? false;
 
   constructor(
@@ -200,6 +202,7 @@ export class VillageEngine {
     this.near = this.editor.open ? null : this.findNear();
     const before = this.lighting.previewLabel;
     this.lighting.update(dt);
+    this.ambient.update(dt);
     if (this.lighting.previewLabel !== before) this.emitUi();
 
     this.saveT += dt;
@@ -228,6 +231,7 @@ export class VillageEngine {
     ctx.drawImage(this.map, 0, 0);
     ctx.imageSmoothingEnabled = false;
 
+    this.ambient.draw(ctx);
     this.player.draw(ctx, camera);
     ctx.setTransform(camera.scale, 0, 0, camera.scale, camera.offsetX, camera.offsetY);
     this.lighting.drawTint(ctx);
