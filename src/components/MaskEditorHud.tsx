@@ -23,7 +23,7 @@ export function MaskEditorHud({ state, onSave, onUndo, onClose }: Props) {
         <li>
           <b>Ctrl+S</b> save · <b>M</b> / <b>Esc</b> close
         </li>
-        {!state.overview && <li>Arrows/WASD move the view (Shift = faster)</li>}
+        {!state.overview && <li>Arrows/WASD walk anywhere (walls ignored while editing)</li>}
       </ul>
       <div className="editor-actions">
         <button onClick={onSave}>{state.dirty ? 'Save*' : 'Save'}</button>

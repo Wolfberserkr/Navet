@@ -1,8 +1,13 @@
 import { Camera } from './camera';
-import { MAP_H, MAP_W } from './constants';
 import { Input } from './input';
 import { MaskEditor, type MaskEditorState } from './mask-editor';
 import type { WalkMask } from './mask';
+import { Player } from './player';
+import { TouchStick } from './touch';
+
+/** Where Rick appears: the plaza, between the town hall steps and the fountain. */
+const SPAWN = { x: 1150, y: 830 };
+const POS_KEY = 'village.player';
 
 export interface UiState {
   editor: MaskEditorState;
@@ -19,7 +24,9 @@ export class VillageEngine {
   private ctx: CanvasRenderingContext2D;
   private raf = 0;
   private last = 0;
-  private focus = { x: MAP_W / 2, y: MAP_H / 2 };
+  readonly player: Player;
+  private touch: TouchStick;
+  private saveT = 0;
 
   constructor(
     private canvas: HTMLCanvasElement,
@@ -31,6 +38,33 @@ export class VillageEngine {
     if (!ctx) throw new Error('Canvas 2D is not available');
     this.ctx = ctx;
     this.editor = new MaskEditor(mask, this.camera, canvas, () => this.emitUi());
+    this.touch = new TouchStick(canvas, this.input);
+    this.player = new Player(this.findStart(), mask);
+  }
+
+  /** Last position this session (survives a reload), else the plaza. */
+  private findStart() {
+    let start = SPAWN;
+    try {
+      const saved = JSON.parse(sessionStorage.getItem(POS_KEY) ?? 'null');
+      if (saved && typeof saved.x === 'number' && typeof saved.y === 'number') start = saved;
+    } catch {
+      /* storage unavailable */
+    }
+    if (this.mask.at(start.x, start.y)) return start;
+    // Spiral out to the nearest walkable spot.
+    for (let r = 8; r < 600; r += 8) {
+      for (let a = 0; a < Math.PI * 2; a += 0.3) {
+        const x = SPAWN.x + Math.cos(a) * r;
+        const y = SPAWN.y + Math.sin(a) * r;
+        if (this.mask.at(x, y)) return { x, y };
+      }
+    }
+    return SPAWN;
+  }
+
+  private get focus() {
+    return { x: this.player.x, y: this.player.y - 36 };
   }
 
   start() {
@@ -52,6 +86,7 @@ export class VillageEngine {
     cancelAnimationFrame(this.raf);
     this.input.dispose();
     this.editor.dispose();
+    this.touch.dispose();
   }
 
   resize() {
@@ -114,14 +149,21 @@ export class VillageEngine {
 
   private update(dt: number) {
     this.handleActions();
-    if (this.editor.open && !this.camera.overview) {
-      // Zoomed-in editing: arrows/WASD pan freely, ignoring the mask.
-      const m = this.input.move;
-      const speed = this.input.running ? 900 : 450;
-      this.focus.x = Math.min(MAP_W, Math.max(0, this.focus.x + m.x * speed * dt));
-      this.focus.y = Math.min(MAP_H, Math.max(0, this.focus.y + m.y * speed * dt));
-    }
+    this.touch.enabled = !this.editor.open;
+    // In the mask editor the player walks through everything, to reach any spot.
+    const frozen = this.editor.open && this.camera.overview;
+    if (!frozen) this.player.update(dt, this.input.move, this.input.running, this.editor.open);
     this.camera.follow(this.focus.x, this.focus.y, dt);
+
+    this.saveT += dt;
+    if (this.saveT > 1) {
+      this.saveT = 0;
+      try {
+        sessionStorage.setItem(POS_KEY, JSON.stringify({ x: Math.round(this.player.x), y: Math.round(this.player.y) }));
+      } catch {
+        /* storage unavailable */
+      }
+    }
   }
 
   private render() {
@@ -140,5 +182,7 @@ export class VillageEngine {
     ctx.imageSmoothingEnabled = false;
 
     this.editor.draw(ctx);
+    this.player.draw(ctx, camera);
+    this.touch.draw(ctx, window.devicePixelRatio || 1);
   }
 }
