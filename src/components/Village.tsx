@@ -1,23 +1,25 @@
 import { useEffect, useRef, useState } from 'react';
-import { VillageEngine } from '../game/engine';
+import { VillageEngine, type UiState } from '../game/engine';
 import { loadMap } from '../game/assets';
+import { WalkMask } from '../game/mask';
+import { MaskEditorHud } from './MaskEditorHud';
 
 export function Village() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const engineRef = useRef<VillageEngine | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [ready, setReady] = useState(false);
+  const [ui, setUi] = useState<UiState | null>(null);
 
   useEffect(() => {
-    let engine: VillageEngine | null = null;
     let cancelled = false;
-    const onResize = () => engine?.resize();
+    const onResize = () => engineRef.current?.resize();
 
-    loadMap()
-      .then((map) => {
+    Promise.all([loadMap(), WalkMask.load()])
+      .then(([map, mask]) => {
         if (cancelled || !canvasRef.current) return;
-        engine = new VillageEngine(canvasRef.current, map);
+        const engine = new VillageEngine(canvasRef.current, map, mask, setUi);
+        engineRef.current = engine;
         engine.start();
-        setReady(true);
         window.addEventListener('resize', onResize);
       })
       .catch((e: Error) => setError(e.message));
@@ -25,15 +27,26 @@ export function Village() {
     return () => {
       cancelled = true;
       window.removeEventListener('resize', onResize);
-      engine?.stop();
+      engineRef.current?.stop();
+      engineRef.current = null;
     };
   }, []);
+
+  const engine = engineRef.current;
 
   return (
     <div className="village">
       <canvas ref={canvasRef} className="village-canvas" />
-      {!ready && !error && <div className="village-loading">The village is waking up…</div>}
+      {!ui && !error && <div className="village-loading">The village is waking up…</div>}
       {error && <div className="village-loading">{error}</div>}
+      {ui && engine && (
+        <MaskEditorHud
+          state={ui.editor}
+          onSave={() => engine.input.push('save')}
+          onUndo={() => engine.input.push('undo')}
+          onClose={() => engine.input.push('toggleMask')}
+        />
+      )}
     </div>
   );
 }

@@ -1,5 +1,12 @@
 import { Camera } from './camera';
 import { MAP_H, MAP_W } from './constants';
+import { Input } from './input';
+import { MaskEditor, type MaskEditorState } from './mask-editor';
+import type { WalkMask } from './mask';
+
+export interface UiState {
+  editor: MaskEditorState;
+}
 
 /**
  * Owns the world state and draws it on the canvas every frame.
@@ -7,6 +14,8 @@ import { MAP_H, MAP_W } from './constants';
  */
 export class VillageEngine {
   readonly camera = new Camera();
+  readonly input = new Input();
+  readonly editor: MaskEditor;
   private ctx: CanvasRenderingContext2D;
   private raf = 0;
   private last = 0;
@@ -15,16 +24,20 @@ export class VillageEngine {
   constructor(
     private canvas: HTMLCanvasElement,
     private map: HTMLImageElement,
+    readonly mask: WalkMask,
+    private onUi: (ui: UiState) => void,
   ) {
     const ctx = canvas.getContext('2d', { alpha: false });
     if (!ctx) throw new Error('Canvas 2D is not available');
     this.ctx = ctx;
+    this.editor = new MaskEditor(mask, this.camera, canvas, () => this.emitUi());
   }
 
   start() {
     this.resize();
     this.camera.snapTo(this.focus.x, this.focus.y);
     this.last = performance.now();
+    this.emitUi();
     const tick = (now: number) => {
       const dt = Math.min((now - this.last) / 1000, 0.1);
       this.last = now;
@@ -37,6 +50,8 @@ export class VillageEngine {
 
   stop() {
     cancelAnimationFrame(this.raf);
+    this.input.dispose();
+    this.editor.dispose();
   }
 
   resize() {
@@ -51,7 +66,61 @@ export class VillageEngine {
     this.camera.snapTo(this.focus.x, this.focus.y);
   }
 
+  private emitUi() {
+    this.onUi({ editor: this.editor.state });
+  }
+
+  private setOverview(on: boolean) {
+    this.camera.overview = on;
+    this.camera.resize(this.canvas.width, this.canvas.height);
+    this.camera.snapTo(this.focus.x, this.focus.y);
+    this.emitUi();
+  }
+
+  private handleActions() {
+    for (const a of this.input.takeActions()) {
+      switch (a) {
+        case 'toggleMask':
+          this.editor.open = !this.editor.open;
+          this.editor.status = '';
+          this.setOverview(this.editor.open);
+          break;
+        case 'overview':
+          if (this.editor.open) this.setOverview(!this.camera.overview);
+          break;
+        case 'save':
+          if (this.editor.open) void this.editor.save();
+          break;
+        case 'undo':
+          if (this.editor.open) this.editor.undoLast();
+          break;
+        case 'brushUp':
+          if (this.editor.open) this.editor.setBrush(this.editor.brush * 1.25);
+          break;
+        case 'brushDown':
+          if (this.editor.open) this.editor.setBrush(this.editor.brush / 1.25);
+          break;
+        case 'close':
+          if (this.editor.open) {
+            this.editor.open = false;
+            this.setOverview(false);
+          }
+          break;
+        default:
+          break;
+      }
+    }
+  }
+
   private update(dt: number) {
+    this.handleActions();
+    if (this.editor.open && !this.camera.overview) {
+      // Zoomed-in editing: arrows/WASD pan freely, ignoring the mask.
+      const m = this.input.move;
+      const speed = this.input.running ? 900 : 450;
+      this.focus.x = Math.min(MAP_W, Math.max(0, this.focus.x + m.x * speed * dt));
+      this.focus.y = Math.min(MAP_H, Math.max(0, this.focus.y + m.y * speed * dt));
+    }
     this.camera.follow(this.focus.x, this.focus.y, dt);
   }
 
@@ -69,5 +138,7 @@ export class VillageEngine {
     ctx.setTransform(camera.scale, 0, 0, camera.scale, camera.offsetX, camera.offsetY);
     ctx.drawImage(this.map, 0, 0);
     ctx.imageSmoothingEnabled = false;
+
+    this.editor.draw(ctx);
   }
 }
