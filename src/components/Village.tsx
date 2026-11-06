@@ -3,6 +3,7 @@ import { VillageEngine, type UiState } from '../game/engine';
 import { loadMap } from '../game/assets';
 import { WalkMask } from '../game/mask';
 import { MaskEditorHud } from './MaskEditorHud';
+import { HotspotPanel } from './HotspotPanel';
 
 export function Village() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -39,6 +40,7 @@ export function Village() {
       <canvas ref={canvasRef} className="village-canvas" />
       {!ui && !error && <div className="village-loading">The village is waking up…</div>}
       {error && <div className="village-loading">{error}</div>}
+      {ui?.open && engine && <HotspotPanel spot={ui.open} onClose={() => engine.closePanel()} />}
       {ui && engine && (
         <MaskEditorHud
           state={ui.editor}

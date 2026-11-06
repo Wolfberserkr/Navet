@@ -4,6 +4,8 @@ import { MaskEditor, type MaskEditorState } from './mask-editor';
 import type { WalkMask } from './mask';
 import { Player } from './player';
 import { TouchStick } from './touch';
+import { HOTSPOTS, type Hotspot } from '../data/residents';
+import { drawLabel } from './labels';
 
 /** Where Rick appears: the plaza, between the town hall steps and the fountain. */
 const SPAWN = { x: 1150, y: 830 };
@@ -11,6 +13,8 @@ const POS_KEY = 'village.player';
 
 export interface UiState {
   editor: MaskEditorState;
+  /** The building panel that is open, if any. */
+  open: Hotspot | null;
 }
 
 /**
@@ -27,6 +31,9 @@ export class VillageEngine {
   readonly player: Player;
   private touch: TouchStick;
   private saveT = 0;
+  private near: Hotspot | null = null;
+  private open: Hotspot | null = null;
+  private readonly touchHint = window.matchMedia?.('(pointer: coarse)').matches ?? false;
 
   constructor(
     private canvas: HTMLCanvasElement,
@@ -102,7 +109,7 @@ export class VillageEngine {
   }
 
   private emitUi() {
-    this.onUi({ editor: this.editor.state });
+    this.onUi({ editor: this.editor.state, open: this.open });
   }
 
   private setOverview(on: boolean) {
@@ -112,10 +119,29 @@ export class VillageEngine {
     this.emitUi();
   }
 
+  closePanel() {
+    this.open = null;
+    this.emitUi();
+  }
+
+  private findNear(): Hotspot | null {
+    let best: Hotspot | null = null;
+    let bestD = Infinity;
+    for (const h of HOTSPOTS) {
+      const d = Math.hypot(h.x - this.player.x, h.y - this.player.y);
+      if (d < h.radius && d < bestD) {
+        best = h;
+        bestD = d;
+      }
+    }
+    return best;
+  }
+
   private handleActions() {
     for (const a of this.input.takeActions()) {
       switch (a) {
         case 'toggleMask':
+          if (this.open) break;
           this.editor.open = !this.editor.open;
           this.editor.status = '';
           this.setOverview(this.editor.open);
@@ -135,8 +161,17 @@ export class VillageEngine {
         case 'brushDown':
           if (this.editor.open) this.editor.setBrush(this.editor.brush / 1.25);
           break;
+        case 'interact':
+          if (this.editor.open) break;
+          if (this.open) this.closePanel();
+          else if (this.near) {
+            this.open = this.near;
+            this.emitUi();
+          }
+          break;
         case 'close':
-          if (this.editor.open) {
+          if (this.open) this.closePanel();
+          else if (this.editor.open) {
             this.editor.open = false;
             this.setOverview(false);
           }
@@ -151,9 +186,10 @@ export class VillageEngine {
     this.handleActions();
     this.touch.enabled = !this.editor.open;
     // In the mask editor the player walks through everything, to reach any spot.
-    const frozen = this.editor.open && this.camera.overview;
+    const frozen = (this.editor.open && this.camera.overview) || this.open !== null;
     if (!frozen) this.player.update(dt, this.input.move, this.input.running, this.editor.open);
     this.camera.follow(this.focus.x, this.focus.y, dt);
+    this.near = this.editor.open ? null : this.findNear();
 
     this.saveT += dt;
     if (this.saveT > 1) {
@@ -183,6 +219,11 @@ export class VillageEngine {
 
     this.editor.draw(ctx);
     this.player.draw(ctx, camera);
+    if (this.near && !this.open) {
+      const px = Math.max(2, Math.round(Math.min(this.canvas.width, this.canvas.height) / 330));
+      const anchor = camera.mapToScreen(this.near.x, this.near.y - 112);
+      drawLabel(ctx, this.near.label, this.touchHint ? 'TAP' : 'PRESS ENTER', anchor.x, anchor.y, px, this.canvas.width);
+    }
     this.touch.draw(ctx, window.devicePixelRatio || 1);
   }
 }
