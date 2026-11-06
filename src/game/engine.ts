@@ -6,6 +6,7 @@ import { Player } from './player';
 import { TouchStick } from './touch';
 import { HOTSPOTS, type Hotspot } from '../data/residents';
 import { drawLabel } from './labels';
+import { Lighting } from './lighting';
 
 /** Where Rick appears: the plaza, between the town hall steps and the fountain. */
 const SPAWN = { x: 1150, y: 830 };
@@ -15,6 +16,8 @@ export interface UiState {
   editor: MaskEditorState;
   /** The building panel that is open, if any. */
   open: Hotspot | null;
+  /** Day/night preview readout (key T), null in normal use. */
+  preview: string | null;
 }
 
 /**
@@ -33,6 +36,7 @@ export class VillageEngine {
   private saveT = 0;
   private near: Hotspot | null = null;
   private open: Hotspot | null = null;
+  readonly lighting = new Lighting();
   private readonly touchHint = window.matchMedia?.('(pointer: coarse)').matches ?? false;
 
   constructor(
@@ -109,7 +113,7 @@ export class VillageEngine {
   }
 
   private emitUi() {
-    this.onUi({ editor: this.editor.state, open: this.open });
+    this.onUi({ editor: this.editor.state, open: this.open, preview: this.lighting.previewLabel });
   }
 
   private setOverview(on: boolean) {
@@ -145,6 +149,10 @@ export class VillageEngine {
           this.editor.open = !this.editor.open;
           this.editor.status = '';
           this.setOverview(this.editor.open);
+          break;
+        case 'cycleTime':
+          this.lighting.cycle();
+          this.emitUi();
           break;
         case 'overview':
           if (this.editor.open) this.setOverview(!this.camera.overview);
@@ -190,6 +198,9 @@ export class VillageEngine {
     if (!frozen) this.player.update(dt, this.input.move, this.input.running, this.editor.open);
     this.camera.follow(this.focus.x, this.focus.y, dt);
     this.near = this.editor.open ? null : this.findNear();
+    const before = this.lighting.previewLabel;
+    this.lighting.update(dt);
+    if (this.lighting.previewLabel !== before) this.emitUi();
 
     this.saveT += dt;
     if (this.saveT > 1) {
@@ -217,8 +228,14 @@ export class VillageEngine {
     ctx.drawImage(this.map, 0, 0);
     ctx.imageSmoothingEnabled = false;
 
-    this.editor.draw(ctx);
     this.player.draw(ctx, camera);
+    ctx.setTransform(camera.scale, 0, 0, camera.scale, camera.offsetX, camera.offsetY);
+    this.lighting.drawTint(ctx);
+    this.lighting.drawGlows(ctx);
+    this.lighting.drawPlayerLight(ctx, this.player.x, this.player.y);
+    this.lighting.drawVignette(ctx, this.canvas.width, this.canvas.height);
+    ctx.setTransform(camera.scale, 0, 0, camera.scale, camera.offsetX, camera.offsetY);
+    this.editor.draw(ctx);
     if (this.near && !this.open) {
       const px = Math.max(2, Math.round(Math.min(this.canvas.width, this.canvas.height) / 330));
       const anchor = camera.mapToScreen(this.near.x, this.near.y - 112);

@@ -188,3 +188,16 @@ canvas {
     padding-bottom: 52px;
   }
 }
+
+/* ---------- day/night preview readout (key T) ---------- */
+.time-preview {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 6px 10px;
+  font-size: 13px;
+  color: var(--parchment);
+  background: rgba(20, 16, 28, 0.85);
+  border: 2px solid var(--gold);
+  pointer-events: none;
+}

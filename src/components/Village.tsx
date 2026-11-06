@@ -40,6 +40,7 @@ export function Village() {
       <canvas ref={canvasRef} className="village-canvas" />
       {!ui && !error && <div className="village-loading">The village is waking up…</div>}
       {error && <div className="village-loading">{error}</div>}
+      {ui?.preview && <div className="time-preview">Preview: {ui.preview} — T for next</div>}
       {ui?.open && engine && <HotspotPanel spot={ui.open} onClose={() => engine.closePanel()} />}
       {ui && engine && (
         <MaskEditorHud
