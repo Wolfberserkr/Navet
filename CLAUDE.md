@@ -35,7 +35,7 @@ Full design: `docs/concept.md`. Read it before starting any phase. This file hol
 
 ## Art rules
 
-- The map `assets/map/village-map-v1.png` (2576×1438) is a **still painted image**. Never redraw or regenerate it. All motion (smoke, fountain, flags, walking characters, day/night, lit windows) is **layered on top in code**.
+- The map `assets/map/village-map-v2.png` (2576×1438) is a **still painted image**. Never redraw or regenerate it. All motion (smoke, fountain, flags, walking characters, day/night, lit windows) is **layered on top in code**.
 - Portraits in `assets/portraits/` sit on a flat magenta (#FF00FF) background meant to be keyed out. Remove it with a tolerance; Gemini's magenta is not perfectly uniform.
 - Keep pixels crisp: `image-rendering: pixelated`, integer scaling where possible, no smoothing on the canvas.
 - Art is made by Rick in Gemini, by hand. Never call an image API without asking.
