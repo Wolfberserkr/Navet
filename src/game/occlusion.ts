@@ -22,6 +22,24 @@ const PREPARED: Prepared[] = OCCLUDERS.map((o) => {
 });
 
 /**
+ * The outline's lowest point straight below x: the foot of the building's front
+ * wall there. For angled buildings this follows the slope of the wall.
+ */
+function bottomAt(o: Prepared, x: number): number {
+  const cx = Math.min(Math.max(x, o.x0), o.x1);
+  let bottom = -Infinity;
+  const n = o.poly.length;
+  for (let i = 0; i < n; i++) {
+    const [ax, ay] = o.poly[i];
+    const [bx, by] = o.poly[(i + 1) % n];
+    if (cx < Math.min(ax, bx) || cx > Math.max(ax, bx)) continue;
+    const y = ax === bx ? Math.max(ay, by) : ay + ((cx - ax) / (bx - ax)) * (by - ay);
+    if (y > bottom) bottom = y;
+  }
+  return bottom;
+}
+
+/**
  * Redraw the parts of the map that stand in front of Rick: every building whose
  * front wall is below his feet and whose outline overlaps his sprite.
  * Call with the map transform set, right after drawing the player.
@@ -31,8 +49,8 @@ export function drawOccluders(ctx: CanvasRenderingContext2D, map: HTMLImageEleme
   const bx1 = px + HALF_W;
   const by0 = py - HEIGHT;
   for (const o of PREPARED) {
-    if (py >= o.baseY) continue;
     if (bx1 < o.x0 || bx0 > o.x1 || py < o.y0 || by0 > o.y1) continue;
+    if (py >= bottomAt(o, px)) continue;
     ctx.save();
     ctx.clip(o.path);
     ctx.drawImage(map, 0, 0);
