@@ -31,42 +31,43 @@ BLOCK = [
     [(0, 642), (120, 645), (175, 690), (200, 770), (250, 815), (330, 880), (450, 898),
      (600, 925), (750, 955), (900, 975), (1000, 1000), (1400, 995), (1460, 955),
      (1600, 905), (1700, 880), (1730, 640), (2000, 640), (2000, 1116), (0, 1116)],
-    # Tree west of the longhouse, bush and rock by the west road.
-    [(195, 600), (310, 600), (320, 700), (275, 745), (210, 730), (185, 660)],
+    # Trunk of the tree west of the longhouse (its crown can be walked behind),
+    # bush and rock by the west road.
+    R(222, 722, 290, 752),
     R(228, 465, 296, 530), R(178, 492, 216, 526),
     # Rocks east of the workshop, bush east of the stalls.
     R(1668, 660, 1748, 728), R(1662, 455, 1722, 496),
-    # Maarten: academy, vegetable garden, fence, flower box, sign.
+    # Maarten: academy, vegetable garden, fence, flower box.
     R(358, 185, 552, 386), R(283, 255, 362, 425), R(283, 400, 420, 426),
-    R(486, 372, 540, 402), R(546, 295, 598, 338),
+    R(486, 372, 540, 402),
     # Marisol: cottage, fences, barrel and crate.
     R(636, 130, 792, 390), R(594, 322, 640, 345), R(594, 322, 606, 410),
     R(780, 322, 832, 345), R(820, 322, 832, 410), R(742, 360, 778, 412),
-    # Rhod: town hall and the platform either side of the steps; post.
+    # Rhod: town hall and the platform either side of the steps; foot of the post.
     R(848, 30, 1152, 384), R(848, 384, 940, 446), R(1058, 384, 1152, 446),
-    R(1084, 418, 1100, 478),
-    # Ruben: counting house, sign, crates.
-    R(1226, 200, 1394, 392), R(1178, 296, 1228, 352), R(1392, 302, 1428, 378),
-    # Yara: cottage, cooking pot, crates and barrels.
-    R(1468, 205, 1688, 392), R(1428, 312, 1476, 362), R(1450, 358, 1540, 428),
+    R(1084, 464, 1100, 480),
+    # Ruben: counting house and crates (the wall sign can be walked under).
+    R(1226, 200, 1394, 392), R(1392, 302, 1428, 378),
+    # Yara: cottage, crates and barrels (the hanging pot can be walked under).
+    R(1468, 205, 1688, 392), R(1450, 358, 1540, 428),
     R(1598, 382, 1652, 422), R(1652, 358, 1692, 398), R(1648, 408, 1680, 442),
-    # Ivo: training house, dummy, dog, bike, barrels.
-    R(488, 432, 700, 612), R(444, 545, 492, 616), R(510, 598, 546, 626),
+    # Ivo: training house walls (the roof can be walked behind), dummy, dog, bike, barrels.
+    R(488, 522, 700, 612), R(452, 600, 486, 618), R(510, 598, 546, 626),
     R(626, 578, 702, 626), R(690, 522, 724, 600),
-    # Market stalls.
-    R(1308, 462, 1402, 576), R(1428, 462, 1548, 582),
+    # Market stalls: legs and counters only, the awnings can be walked behind.
+    R(1308, 540, 1402, 576), R(1428, 540, 1548, 582),
     # Fountain.
     'fountain',
-    # Liv: longhouse and its fence, flag with fence, banner post, stall.
-    [(505, 820), (540, 770), (590, 668), (730, 598), (800, 762), (800, 900), (746, 925),
-     (746, 962), (505, 962)],
-    R(800, 812, 908, 898), R(788, 655, 812, 732), R(812, 668, 908, 788),
-    # Gisela: inn, sign, bench, barrel.
-    R(1028, 698, 1272, 902), R(978, 836, 1030, 892), R(1186, 888, 1248, 926),
+    # Liv: longhouse walls, foot of the flag and banner post, stall legs.
+    [(505, 962), (505, 830), (600, 782), (772, 762), (806, 792), (806, 905), (746, 925),
+     (746, 962)],
+    R(800, 850, 908, 898), R(790, 718, 810, 734), R(812, 750, 908, 788),
+    # Gisela: inn walls, bench, barrel.
+    R(1028, 792, 1272, 902), R(1186, 888, 1248, 926),
     R(1262, 856, 1292, 902),
     # Elvin: workshop, fenced plot to its west, fenced yard.
-    [(1375, 648), (1490, 645), (1612, 645), (1662, 690), (1662, 782), (1600, 842),
-     (1530, 852), (1478, 845), (1430, 800), (1370, 700)],
+    [(1395, 770), (1440, 722), (1600, 702), (1662, 722), (1662, 782), (1600, 842),
+     (1530, 852), (1478, 845), (1430, 800)],
     [(1228, 692), (1300, 648), (1425, 650), (1432, 700), (1418, 842), (1398, 842), (1262, 752)],
     [(1470, 842), (1590, 918), (1728, 822), (1728, 790), (1662, 748), (1600, 842)],
 ]

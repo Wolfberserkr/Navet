@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { VillageEngine, type UiState } from '../game/engine';
 import { loadMap } from '../game/assets';
 import { WalkMask } from '../game/mask';
+import { Occlusion } from '../game/occlusion';
 import { MaskEditorHud } from './MaskEditorHud';
 import { HotspotPanel } from './HotspotPanel';
 
@@ -16,9 +17,10 @@ export function Village() {
     const onResize = () => engineRef.current?.resize();
 
     Promise.all([loadMap(), WalkMask.load()])
-      .then(([map, mask]) => {
+      .then(async ([map, mask]) => [map, mask, await Occlusion.load(map)] as const)
+      .then(([map, mask, occlusion]) => {
         if (cancelled || !canvasRef.current) return;
-        const engine = new VillageEngine(canvasRef.current, map, mask, setUi);
+        const engine = new VillageEngine(canvasRef.current, map, mask, occlusion, setUi);
         engineRef.current = engine;
         engine.start();
         window.addEventListener('resize', onResize);

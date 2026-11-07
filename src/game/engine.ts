@@ -8,6 +8,7 @@ import { HOTSPOTS, type Hotspot } from '../data/residents';
 import { drawLabel } from './labels';
 import { Lighting } from './lighting';
 import { Ambient } from './ambient';
+import type { Occlusion } from './occlusion';
 
 /** Where Rick appears: the plaza, just south of the fountain. */
 const SPAWN = { x: 1293, y: 902 };
@@ -45,6 +46,7 @@ export class VillageEngine {
     private canvas: HTMLCanvasElement,
     private map: HTMLImageElement,
     readonly mask: WalkMask,
+    private occlusion: Occlusion,
     private onUi: (ui: UiState) => void,
   ) {
     const ctx = canvas.getContext('2d', { alpha: false });
@@ -234,6 +236,10 @@ export class VillageEngine {
     this.ambient.draw(ctx);
     this.player.draw(ctx, camera);
     ctx.setTransform(camera.scale, 0, 0, camera.scale, camera.offsetX, camera.offsetY);
+    // Roofs and walls in front of Rick are drawn again on top of him.
+    ctx.imageSmoothingEnabled = camera.scale < 1;
+    this.occlusion.draw(ctx, this.player.x, this.player.y);
+    ctx.imageSmoothingEnabled = false;
     this.lighting.drawTint(ctx);
     this.lighting.drawGlows(ctx);
     this.lighting.drawPlayerLight(ctx, this.player.x, this.player.y);
