@@ -1,6 +1,6 @@
 # Character sprite and blink prompts (Gemini)
 
-Prompts for the walking map sprites (12 directions each) and the portrait blink frames, for Rick and all nine residents. Every prompt is self-contained: paste it as-is.
+Prompts for the standing map sprites (12 directions each) and the portrait blink frames, for Rick and all nine residents. Every prompt is self-contained: paste it as-is. Walk cycles are in `walk-prompts.md`.
 
 ## What to attach
 
