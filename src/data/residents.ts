@@ -29,17 +29,16 @@ export interface Hotspot {
 }
 
 /**
- * Door positions were measured on village-map-v1.png (2576×1438).
- * The Phase 1 brief gave rough percentages; these are the checked spots in
- * front of each door.
+ * Door positions were measured on village-map-v2.png (2576×1438).
+ * Each is the spot just in front of the door, checked against the walk mask.
  */
 export const HOTSPOTS: Hotspot[] = [
   {
     id: 'rhod',
     label: 'Rhod — Town Hall',
-    x: 985,
-    y: 810,
-    radius: 95,
+    x: 1288,
+    y: 513,
+    radius: 115,
     resident: {
       name: 'Rhod',
       role: 'Chief of staff',
@@ -51,8 +50,8 @@ export const HOTSPOTS: Hotspot[] = [
   {
     id: 'marisol',
     label: 'Marisol — Post Cottage',
-    x: 1230,
-    y: 505,
+    x: 917,
+    y: 528,
     radius: 80,
     resident: {
       name: 'Marisol',
@@ -65,8 +64,8 @@ export const HOTSPOTS: Hotspot[] = [
   {
     id: 'ruben',
     label: 'Ruben — Counting House',
-    x: 1450,
-    y: 535,
+    x: 1685,
+    y: 528,
     radius: 80,
     resident: {
       name: 'Ruben',
@@ -79,8 +78,8 @@ export const HOTSPOTS: Hotspot[] = [
   {
     id: 'yara',
     label: 'Yara — Kitchen Cottage',
-    x: 1688,
-    y: 628,
+    x: 2016,
+    y: 528,
     radius: 80,
     resident: {
       name: 'Yara',
@@ -93,13 +92,13 @@ export const HOTSPOTS: Hotspot[] = [
   {
     id: 'ivo',
     label: 'Ivo — Training House',
-    x: 2088,
-    y: 742,
+    x: 766,
+    y: 814,
     radius: 80,
     resident: {
       name: 'Ivo',
       role: 'Fitness',
-      house: 'Slate-roof training house with a crossed-swords shield, sparring dummy and bicycle',
+      house: 'Slate-roof training house west of the plaza, with a crossed-swords shield, sparring dummy and bicycle',
       personality: 'High energy, keeps score of everything.',
       portrait: ivo,
     },
@@ -107,8 +106,8 @@ export const HOTSPOTS: Hotspot[] = [
   {
     id: 'maarten',
     label: 'Maarten — Academy',
-    x: 545,
-    y: 892,
+    x: 586,
+    y: 522,
     radius: 85,
     resident: {
       name: 'Maarten',
@@ -121,8 +120,8 @@ export const HOTSPOTS: Hotspot[] = [
   {
     id: 'liv',
     label: 'Liv — Longhouse',
-    x: 1015,
-    y: 1188,
+    x: 1011,
+    y: 1198,
     radius: 85,
     resident: {
       name: 'Liv',
@@ -135,8 +134,8 @@ export const HOTSPOTS: Hotspot[] = [
   {
     id: 'gisela',
     label: 'Gisela — The Inn',
-    x: 1530,
-    y: 1272,
+    x: 1481,
+    y: 1182,
     radius: 85,
     resident: {
       name: 'Gisela',
@@ -149,8 +148,8 @@ export const HOTSPOTS: Hotspot[] = [
   {
     id: 'elvin',
     label: 'Elvin — Workshop',
-    x: 1885,
-    y: 1100,
+    x: 1868,
+    y: 1105,
     radius: 85,
     resident: {
       name: 'Elvin',
@@ -163,8 +162,8 @@ export const HOTSPOTS: Hotspot[] = [
   {
     id: 'fountain',
     label: 'The Fountain',
-    x: 1292,
-    y: 872,
+    x: 1294,
+    y: 866,
     radius: 70,
     blurb: 'The heart of the plaza. Every path in the village starts here.',
   },

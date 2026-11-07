@@ -9,8 +9,8 @@ import { drawLabel } from './labels';
 import { Lighting } from './lighting';
 import { Ambient } from './ambient';
 
-/** Where Rick appears: the plaza, between the town hall steps and the fountain. */
-const SPAWN = { x: 1150, y: 830 };
+/** Where Rick appears: the plaza, just south of the fountain. */
+const SPAWN = { x: 1293, y: 902 };
 const POS_KEY = 'village.player';
 
 export interface UiState {

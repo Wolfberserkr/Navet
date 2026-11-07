@@ -8,10 +8,10 @@ const LH = Math.ceil(MAP_H / PX);
 
 /** Fountain geometry measured on the map (map px). */
 const FOUNTAIN = {
-  spout: { x: 1295, y: 700 },
-  upper: { x: 1295, y: 751, rx: 22, ry: 8 },
-  lower: { x: 1292, y: 788, rx: 50, ry: 18 },
-  column: { x0: 1279, x1: 1311 },
+  spout: { x: 1294, y: 702 },
+  upper: { x: 1294, y: 753, rx: 30, ry: 9 },
+  lower: { x: 1293, y: 801, rx: 66, ry: 24 },
+  column: { x0: 1276, x1: 1312 },
 };
 
 interface Puff {

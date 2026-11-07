@@ -45,7 +45,7 @@ A classic fantasy village in 16-bit pixel art: a stone town hall with a bell tow
 ### How the art was made
 
 - **Tool:** Gemini (Nano Banana), by hand. Concept, then a zoomed-in village, then one house per in-place edit, then one final upscale.
-- **Current file:** `assets/map/village-map-v1.png`, 2576×1438. Earlier versions are in `assets/map/history/`.
+- **Current file:** `assets/map/village-map-v2.png`, 2576×1438 (spaced-out layout with a ring road; brief in `docs/map-v2/`). Earlier versions, including v1, are in `assets/map/history/`.
 - **What prevents drift:** identify each house by its neighbors, list every finished building under "do not change", change only the building itself, never add things on the grass, and go back to the last clean version when something drifts.
 - **Motion** (smoke, the fountain, walking characters, day and night) is layered on top in the village app; the map itself stays a still image.
 - **Portraits:** one per character on a magenta background, in `assets/portraits/`. Blink and talk variants and small walking map sprites are still to be made.

@@ -1,4 +1,4 @@
-import mapUrl from '../../assets/map/village-map-v1.png';
+import mapUrl from '../../assets/map/village-map-v2.png';
 
 export function loadImage(url: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
