@@ -1,59 +1,117 @@
-import { OCCLUDERS, type Occluder } from '../data/occluders';
+import occludersUrl from '../data/occluders.png';
+import { loadImage } from './assets';
 
 /** Rick's sprite box around his feet (map px), slightly generous. */
 const HALF_W = 30;
 const HEIGHT = 80;
+/** Columns either side of Rick's feet used to find the foot of a wall. */
+const FOOT_SPAN = 8;
 
-interface Prepared extends Occluder {
-  path: Path2D;
+interface Cutout {
   x0: number;
   y0: number;
   x1: number;
   y1: number;
+  /** The object's own map pixels, transparent elsewhere. */
+  image: HTMLCanvasElement;
+  /** Per column (from x0): the lowest pixel of the object, or -1 if none. */
+  bottom: Int32Array;
 }
 
-const PREPARED: Prepared[] = OCCLUDERS.map((o) => {
-  const path = new Path2D();
-  o.poly.forEach(([x, y], i) => (i ? path.lineTo(x, y) : path.moveTo(x, y)));
-  path.closePath();
-  const xs = o.poly.map((p) => p[0]);
-  const ys = o.poly.map((p) => p[1]);
-  return { ...o, path, x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) };
-});
-
 /**
- * The outline's lowest point straight below x: the foot of the building's front
- * wall there. For angled buildings this follows the slope of the wall.
+ * Everything Rick can walk behind: buildings, stalls, the fountain, the tree,
+ * the flag and posts. src/data/occluders.png (built by scripts/make-occluders.py)
+ * marks each object's exact pixels; each is cut from the map once and drawn
+ * again over Rick while his feet are above the object's bottom edge.
  */
-function bottomAt(o: Prepared, x: number): number {
-  const cx = Math.min(Math.max(x, o.x0), o.x1);
-  let bottom = -Infinity;
-  const n = o.poly.length;
-  for (let i = 0; i < n; i++) {
-    const [ax, ay] = o.poly[i];
-    const [bx, by] = o.poly[(i + 1) % n];
-    if (cx < Math.min(ax, bx) || cx > Math.max(ax, bx)) continue;
-    const y = ax === bx ? Math.max(ay, by) : ay + ((cx - ax) / (bx - ax)) * (by - ay);
-    if (y > bottom) bottom = y;
+export class Occlusion {
+  private cutouts: Cutout[] = [];
+
+  static async load(map: HTMLImageElement): Promise<Occlusion> {
+    const occ = new Occlusion();
+    try {
+      const maskImg = await loadImage(occludersUrl);
+      occ.build(map, maskImg);
+    } catch {
+      // No cutouts: Rick is simply always drawn on top.
+    }
+    return occ;
   }
-  return bottom;
-}
 
-/**
- * Redraw the parts of the map that stand in front of Rick: every building whose
- * front wall is below his feet and whose outline overlaps his sprite.
- * Call with the map transform set, right after drawing the player.
- */
-export function drawOccluders(ctx: CanvasRenderingContext2D, map: HTMLImageElement, px: number, py: number) {
-  const bx0 = px - HALF_W;
-  const bx1 = px + HALF_W;
-  const by0 = py - HEIGHT;
-  for (const o of PREPARED) {
-    if (bx1 < o.x0 || bx0 > o.x1 || py < o.y0 || by0 > o.y1) continue;
-    if (py >= bottomAt(o, px)) continue;
-    ctx.save();
-    ctx.clip(o.path);
-    ctx.drawImage(map, 0, 0);
-    ctx.restore();
+  private build(map: HTMLImageElement, maskImg: HTMLImageElement) {
+    const W = maskImg.naturalWidth;
+    const H = maskImg.naturalHeight;
+    const c = document.createElement('canvas');
+    c.width = W;
+    c.height = H;
+    const ctx = c.getContext('2d', { willReadFrequently: true })!;
+    ctx.drawImage(maskImg, 0, 0);
+    const mask = ctx.getImageData(0, 0, W, H).data;
+
+    // Bounding box per object index.
+    const boxes = new Map<number, [number, number, number, number]>();
+    for (let y = 0; y < H; y++) {
+      for (let x = 0; x < W; x++) {
+        const v = mask[(y * W + x) * 4];
+        if (!v) continue;
+        const b = boxes.get(v);
+        if (!b) boxes.set(v, [x, y, x, y]);
+        else {
+          if (x < b[0]) b[0] = x;
+          if (x > b[2]) b[2] = x;
+          if (y > b[3]) b[3] = y;
+        }
+      }
+    }
+
+    for (const [v, [x0, y0, x1, y1]] of boxes) {
+      const w = x1 - x0 + 1;
+      const h = y1 - y0 + 1;
+      const image = document.createElement('canvas');
+      image.width = w;
+      image.height = h;
+      const ictx = image.getContext('2d')!;
+      ictx.drawImage(map, -x0, -y0);
+      const px = ictx.getImageData(0, 0, w, h);
+      const bottom = new Int32Array(w).fill(-1);
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const inside = mask[((y0 + y) * W + (x0 + x)) * 4] === v;
+          if (inside) bottom[x] = y0 + y;
+          else px.data[(y * w + x) * 4 + 3] = 0;
+        }
+      }
+      ictx.putImageData(px, 0, 0);
+      this.cutouts.push({ x0, y0, x1, y1, image, bottom });
+    }
+  }
+
+  /** The object's lowest pixel near column x, following sloped walls. */
+  private footAt(c: Cutout, x: number): number {
+    // Near Rick's feet first; at an object's corner fall back to his full width.
+    for (const span of [FOOT_SPAN, HALF_W]) {
+      let foot = -1;
+      const from = Math.max(c.x0, Math.round(x) - span);
+      const to = Math.min(c.x1, Math.round(x) + span);
+      for (let cx = from; cx <= to; cx++) foot = Math.max(foot, c.bottom[cx - c.x0]);
+      if (foot >= 0) return foot;
+    }
+    return -1;
+  }
+
+  /**
+   * Draw again every object that stands in front of Rick and overlaps him.
+   * Call with the map transform set, right after drawing the player.
+   */
+  draw(ctx: CanvasRenderingContext2D, px: number, py: number) {
+    const bx0 = px - HALF_W;
+    const bx1 = px + HALF_W;
+    const by0 = py - HEIGHT;
+    for (const c of this.cutouts) {
+      if (bx1 < c.x0 || bx0 > c.x1 || py < c.y0 || by0 > c.y1) continue;
+      const foot = this.footAt(c, px);
+      if (foot < 0 || py >= foot) continue;
+      ctx.drawImage(c.image, c.x0, c.y0);
+    }
   }
 }

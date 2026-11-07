@@ -39,6 +39,7 @@ To install it as an app, run `npm run build && npm run preview`, open it in Chro
 | `docs/phase-1-prompt.md` | First build instruction: the village viewer |
 | `assets/map/village-map-v2.png` | The village map (2576×1438): ring road, every front door facing the viewer. v1 is in `assets/map/history/` |
 | `scripts/make-mask-v2.py` | Rebuilds the walkable mask for the v2 map |
+| `scripts/make-occluders.py` | Rebuilds `src/data/occluders.png`: pixel cutouts of everything Rick can walk behind (needs Pillow and numpy) |
 | `assets/map/history/` | Earlier map versions and the wide world map, kept in case a house needs redoing |
 | `assets/portraits/` | One portrait per character on magenta (#FF00FF) |
 | `assets/portraits/alt/` | Alternate portraits not currently in use |
