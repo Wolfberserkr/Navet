@@ -1,13 +1,13 @@
 import occludersUrl from '../data/occluders.png';
+import { OCCLUDERS, type OccluderDepth } from '../data/occluders';
 import { loadImage } from './assets';
 
 /** Rick's sprite box around his feet (map px), slightly generous. */
 const HALF_W = 30;
 const HEIGHT = 80;
-/** Columns either side of Rick's feet used to find the foot of a wall. */
-const FOOT_SPAN = 8;
 
 interface Cutout {
+  depth: OccluderDepth;
   x0: number;
   y0: number;
   x1: number;
@@ -22,7 +22,7 @@ interface Cutout {
  * Everything Rick can walk behind: buildings, stalls, the fountain, the tree,
  * the flag and posts. src/data/occluders.png (built by scripts/make-occluders.py)
  * marks each object's exact pixels; each is cut from the map once and drawn
- * again over Rick while his feet are above the object's bottom edge.
+ * again over Rick when it stands in front of him (see OccluderDepth).
  */
 export class Occlusion {
   private cutouts: Cutout[] = [];
@@ -82,21 +82,9 @@ export class Occlusion {
         }
       }
       ictx.putImageData(px, 0, 0);
-      this.cutouts.push({ x0, y0, x1, y1, image, bottom });
+      const depth = OCCLUDERS[v - 1]?.depth ?? 'column';
+      this.cutouts.push({ depth, x0, y0, x1, y1, image, bottom });
     }
-  }
-
-  /** The object's lowest pixel near column x, following sloped walls. */
-  private footAt(c: Cutout, x: number): number {
-    // Near Rick's feet first; at an object's corner fall back to his full width.
-    for (const span of [FOOT_SPAN, HALF_W]) {
-      let foot = -1;
-      const from = Math.max(c.x0, Math.round(x) - span);
-      const to = Math.min(c.x1, Math.round(x) + span);
-      for (let cx = from; cx <= to; cx++) foot = Math.max(foot, c.bottom[cx - c.x0]);
-      if (foot >= 0) return foot;
-    }
-    return -1;
   }
 
   /**
@@ -109,9 +97,27 @@ export class Occlusion {
     const by0 = py - HEIGHT;
     for (const c of this.cutouts) {
       if (bx1 < c.x0 || bx0 > c.x1 || py < c.y0 || by0 > c.y1) continue;
-      const foot = this.footAt(c, px);
-      if (foot < 0 || py >= foot) continue;
-      ctx.drawImage(c.image, c.x0, c.y0);
+      if (c.depth !== 'column') {
+        // Trees, posts, signs, the fountain: one depth for the whole object.
+        const base = c.depth === 'base' ? c.y1 : c.depth;
+        if (py < base) ctx.drawImage(c.image, c.x0, c.y0);
+        continue;
+      }
+      // Buildings and stalls: each column of the object is in front of Rick only
+      // if that column reaches the ground below his feet. Draw those columns in runs.
+      const from = Math.max(c.x0, Math.floor(bx0));
+      const to = Math.min(c.x1, Math.ceil(bx1));
+      let run = -1;
+      for (let x = from; x <= to + 1; x++) {
+        const front = x <= to && c.bottom[x - c.x0] > py;
+        if (front && run < 0) run = x;
+        else if (!front && run >= 0) {
+          const sx = run - c.x0;
+          const w = x - run;
+          ctx.drawImage(c.image, sx, 0, w, c.image.height, run, c.y0, w, c.image.height);
+          run = -1;
+        }
+      }
     }
   }
 }
