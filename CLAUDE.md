@@ -15,7 +15,7 @@ Full design: `docs/concept.md`. Read it before starting any phase. This file hol
 1. **One phase at a time.** Build only the phase Rick asks for (see Build phases). Ask before adding anything outside it.
 2. **Ask before anything that costs money**: paid APIs, API keys, image generation credits, hosting plans, new subscriptions.
 3. **Ask before adding a dependency** that isn't already listed in this file or `package.json`.
-4. **No public hosting.** Never deploy to GitHub Pages or any public URL. The village shows personal data.
+4. **No public hosting once there's data.** Rick allowed GitHub Pages for Phase 1 only (no backend, no personal data). Take the Pages site down before Phase 2 connects Supabase, and never put any other public URL in front of the village.
 5. **Never commit secrets** (tokens, keys, `.env`). Never commit personal health, finance or relationship details; those live in Supabase or local, git-ignored files.
 6. **Keep Rick in the loop on visuals.** After any visual change, describe what changed, and say how to view it locally.
 7. **Commit small, with clear messages**, at the end of each working step.
